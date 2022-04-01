@@ -1,0 +1,163 @@
+<html>
+<head>
+  <title>caterpillar</title>
+  <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background-image: url('https://media.istockphoto.com/photos/palm-leaves-on-a-green-background-or-surface-with-shadow-and-sunlight-picture-id1321288966?b=1&k=20&m=1321288966&s=170667a&w=0&h=9hduvAX9Uji-lzH4SV8lyba6yYAv3XG6hS4FqZU8D2Y=');
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas {
+    border: 5px solid green;
+  }
+  </style>
+</head>
+<body>
+<canvas width="400" height="400" id="gameBounds"></canvas>
+<script>
+var canvas = document.getElementById('gameBounds');
+var context = canvas.getContext('2d');
+
+var grid = 16;
+var count = 0;
+  
+var caterpillar = {
+  x: 160,
+  y: 160,
+  
+  // caterpillar velocity
+  dx: grid,
+  dy: 0,
+  
+  // keep track of all grids the caterpillar body occupies
+  cells: [],
+  
+  // length of the caterpillar which grows when eating an apple
+  maxCells: 4
+};
+var apple = {
+  x: 320,
+  y: 320
+};
+
+// random whole numbers in a given range
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+// game loop
+function loop() {
+  requestAnimationFrame(loop);
+
+  // slows game loop 
+  if (++count < 4) {
+    return;
+  }
+
+  count = 0;
+  context.clearRect(0,0,canvas.width,canvas.height);
+
+  // moves caterpillar by it's velocity
+  caterpillar.x += caterpillar.dx;
+  caterpillar.y += caterpillar.dy;
+
+  // wraps caterpillar position horizontally on edge of screen
+  if (caterpillar.x < 0) {
+    caterpillar.x = caterpillar.width - grid;
+  }
+  else if (caterpillar.x >= canvas.width) {
+    caterpillar.x = 0;
+  }
+  
+  // wraps caterpillar position vertically on edge of screen
+  if (caterpillar.y < 0) {
+    caterpillar.y = canvas.height - grid;
+  }
+  else if (caterpillar.y >= canvas.height) {
+    caterpillar.y = 0;
+  }
+
+  // tracks caterpillar location
+  caterpillar.cells.unshift({x: caterpillar.x, y: caterpillar.y});
+
+  // removes cells 
+  if (caterpillar.cells.length > caterpillar.maxCells) {
+    caterpillar.cells.pop();
+  }
+
+  // draws the apple
+  context.fillStyle = 'red';
+  context.fillRect(apple.x, apple.y, grid-1, grid-1);
+
+  // draws the caterpillar one cell at a time
+  context.fillStyle = 'green';
+  caterpillar.cells.forEach(function(cell, index) {
+    
+    // this separates each square that makes up the caterpillar body 
+    context.fillRect(cell.x, cell.y, grid-1, grid-1);  
+
+    // caterpillar eats apple
+    if (cell.x === apple.x && cell.y === apple.y) {
+      caterpillar.maxCells++;
+
+      // defining the boundary of game
+      apple.x = getRandomInt(0, 25) * grid;
+      apple.y = getRandomInt(0, 25) * grid;
+    }
+
+    for (var i = index + 1; i < caterpillar.cells.length; i++) {
+      
+      // resets game if caterpillar touches its own body
+      if (cell.x === caterpillar.cells[i].x && cell.y === caterpillar.cells[i].y) {
+        caterpillar.x = 160;
+        caterpillar.y = 160;
+        caterpillar.cells = [];
+        caterpillar.maxCells = 4;
+        caterpillar.dx = grid;
+        caterpillar.dy = 0;
+
+        apple.x = getRandomInt(0, 25) * grid;
+        apple.y = getRandomInt(0, 25) * grid;
+      }
+    }
+  });
+}
+
+// keyboard events to move the caterpillar
+document.addEventListener('keydown', function(e) {
+  
+  // left arrow key
+  if (e.which === 37 && caterpillar.dx === 0) {
+    caterpillar.dx = -grid;
+    caterpillar.dy = 0;
+  }
+  // up arrow key
+  else if (e.which === 38 && caterpillar.dy === 0) {
+    caterpillar.dy = -grid;
+    caterpillar.dx = 0;
+  }
+  // right arrow key
+  else if (e.which === 39 && caterpillar.dx === 0) {
+    caterpillar.dx = grid;
+    caterpillar.dy = 0;
+  }
+  // down arrow key
+  else if (e.which === 40 && caterpillar.dy === 0) {
+    caterpillar.dy = grid;
+    caterpillar.dx = 0;
+  }
+});
+
+// start the game
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
